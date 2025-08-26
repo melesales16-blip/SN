@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>MELE SN码解析</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f0f3f5;
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 25px;
+            display: flex;
+            gap: 10px;
+        }
+        #snInput {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            text-transform: uppercase;
+        }
+        button {
+            padding: 12px 25px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        .result-table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .result-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        .result-table td:first-child {
+            width: 30%;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .error-message {
+            color: #dc3545;
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 4px;
+            background: #ffeef0;
+        }
+        .no-match {
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="color: #2c3e50; margin-bottom: 25px;">MELE SN码解析（基于SOP-EN-010-V4 MELE SN序列号编码规则20250714）</h2>
+        <div class="input-group">
+            <input type="text" id="snInput" placeholder="请输入16位SN码" maxlength="16">
+            <button onclick="parseSN()">立即解析</button>
+        </div>
+        <div id="resultArea"></div>
+    </div>
+
+<script>
+// 完整16位SN码解析规则配置
+const SN_RULES = {
+    0: { // 第1位
+        field: "模具代码",
+        mapping: {
+            "1": "PCHD26",
+            "2": "PCHD27",
+            "3": "PCG35",
+            "4": "PCG63",
+            "5": "PCG65",
+            "6": "PCG37",
+            "7": "G52L05X",
+            "8": "PCHD28",
+            "9": "PCHD29",
+            "A": "PCG33",
+            "F": "PCF15",
+            "S": "PCF20 Starrier",
+            "H": "PCF28 Overclock X5",
+            "B": "PCHD28L Quieter DL",
+            "C": "Overclock X7",
+            "D": "Cyber X1",
+        }
+    },
+    1: { // 第2位
+        field: "主控型号",
+        mapping: {
+            "1": "J3355",
+            "2": "J3455",
+            "4": "J4105",
+            "5": "J4125",
+            "6": "N3350",
+            "7": "N3450",
+            "9": "J5005",
+            "A": "J4205",
+            "B": "N4020",
+            "E": "N4000",
+            "F": "S905X2",
+            "H": "N4500",
+            "I": "N5105",
+            "L": "N5100",
+            "R": "N5095",
+            "P": "N95",
+            "Q": "N100",
+            "S": "12450H",
+            "T": "N300",
+            "U": "125H",
+            "V": "N150",
+            "W": "N350",
+            "X": "1240P",
+            "Y": "N355",
+            "Z": "1235U",
+        }
+    },
+    2: { // 第3位
+        field: "PCB版本",
+        mapping: {
+
+        }
+    },
+    3: { // 第4位
+        field: "DDR品牌",
+        mapping: {
+            "0": "无DDR",
+            "S": "Samsung",
+            "M": "Micron",
+            "H": "Hynix",
+            "D": "Spdectek",
+            "C": "长鑫",
+            "B": "BIWEN佰维",
+            "F": "Foresee",
+            "A": "ADATA",
+            "Y": "宇瞻Apacer",
+            "X": "XHW",
+            "R": "Rayson",
+            "L": "Lexar",
+            "I": "ISOCOM",
+            "U": "Crucial",
+        }
+    },
+    4: { // 第5位
+        field: "DDR容量",
+        mapping: {
+            "0": "无DDR",
+            "1": "3GB",
+            "2": "4GB",
+            "3": "6GB",
+            "4": "8GB",
+            "F": "16GB",
+            "H": "32GB",
+        }
+    },
+    5: { // 第6位
+        field: "存储品牌",
+        mapping: {
+            "0": "无EMMC和SSD",
+            "E": "时创意",
+            "F": "ForeSee江波龙",
+            "I": "Airdisk",
+            "N": "朗科Netac",
+            "Y": "EAGET忆捷",
+            "B": "BIWIN",
+            "1": "江波龙EMMC+Foresee SSD",
+            "4": "时创意EMMC+Foresee SSD",
+            "7": "江波龙EMMC+Airdisk SSD",
+            "8": "江波龙EMMC+忆捷 SSD",
+            "9": "时创意EMMC+Airdisk SSD",
+            "A": "时创意EMMC+忆捷 SSD",
+            "S": "SUMSUNG",
+        }
+    },
+    6: { // 第7位
+        field: "存储容量",
+        mapping: {
+            "0": "无",
+            "1": "32GB",
+            "2": "64GB",
+            "3": "128GB",
+            "4": "256GB",
+            "5": "128GB eMMC + 256GB SSD",
+            "6": "256GB eMMC + 256GB SSD",
+            "7": "64GB eMMC + 128GB SSD",
+            "8": "512GB",
+            "9": "1TB",
+            "A": "2TB",
+        }
+    },
+    7: { // 第8位
+        field: "网卡型号",
+        mapping: {
+            "0": "8153",
+            "1": "8111H",
+            "2": "8125BG",
+            "3": "8111K",
+            "4": "8125GB + 8111H",
+            "5": "8125BG + 8125BG",
+        }
+    },
+    8: { // 第9位
+        field: "WiFi模组",
+        mapping: {
+            "0": "9560D2W",
+            "1": "AX101",
+            "2": "AX201",
+            "3": "AC3165",
+            "5": "6252C",
+            "6": "6221C，RTL8822CE-CG",
+            "7": "AC7265",
+            "8": "8=6222C，RTL8822CE-CG",
+            "9": "9377",
+            "N": "无WIFI",
+        }
+    },
+    9: { // 第10位
+        field: "操作系统",
+        mapping: {
+            "N": "No OS/Key",
+            "H": "Home",
+            "P": "Pro",
+            "T": "IOT",
+            "R": "Win PRO 零售版",
+            "U": "无KEY,Ubuntu系统",
+            "W": "万能Key",
+            "O": "OEM Pro",
+        }
+    },
+    10: { // 第11位
+        field: "生产年份",
+        processor: code => `202${code}年`
+    },
+    11: { // 第12位
+        field: "生产月份",
+        processor: code => ({
+            "J": "10月",
+            "Q": "11月",
+            "K": "12月"
+        })[code] || `${code}月`
+    },
+    12: { // 第13-16位
+        field: "流水号",
+        processor: (_, __, sn) => sn.slice(12)
+    }
+};
+
+function parseSN() {
+    const sn = document.getElementById("snInput").value.trim().toUpperCase();
+    const resultArea = document.getElementById("resultArea");
+    resultArea.innerHTML = "";
+
+    // 基础验证
+    if (sn.length !== 16) {
+        resultArea.innerHTML = `
+            <div class="error-message">
+                ⚠️ 错误：必须输入16位字符（当前长度：${sn.length}）
+            </div>`;
+        return;
+    }
+
+    // 获取平台信息
+    const platform = getPlatform(sn[0], sn[1]);
+    
+    // 构建结果表格
+    let html = `<table class="result-table">`;
+    for (let i = 0; i < 16; i++) {
+        const rule = SN_RULES[i >= 12 ? 12 : i]; // 处理流水号
+        const code = sn[i];
+        
+        // 处理特殊字段
+        if (i >= 12) {
+            if (i === 12) { // 只显示一次流水号
+                html += `
+                <tr>
+                    <td>第13-16位（${rule.field}）</td>
+                    <td>${rule.processor(null, null, sn)}</td>
+                </tr>`;
+            }
+            continue;
+        }
+
+        // 获取字段值
+        let value;
+        if (rule.processor) {
+            value = rule.processor(code, platform, sn);
+        } else if (rule.mapping) {
+            value = rule.mapping[code];
+        }
+
+        html += `
+        <tr>
+            <td>第${i+1}位（${rule.field}）</td>
+            <td>${value ? `${code} → ${value}` : 
+                `<span class="no-match">${code}（无匹配记录）</span>`}
+            </td>
+        </tr>`;
+    }
+    html += "</table>";
+    resultArea.innerHTML = html;
+}
+
+// 平台判断函数
+function getPlatform(pos1, pos2) {
+    const platformMap = {
+        "8I": "Gemini Lake",
+        "G5": "Alder Lake",
+        "J2": "Jasper Lake",
+        "AC": "Comet Lake"
+    };
+    return platformMap[`${pos1}${pos2}`] || "未知平台";
+}
+</script>
+</body>
+</html>
