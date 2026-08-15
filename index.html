@@ -73,7 +73,7 @@
 </head>
 <body>
     <div class="container">
-        <h2 style="color: #2c3e50; margin-bottom: 25px;">MELE SN码解析（基于SOP-EN-010-V4 MELE SN序列号编码规则20250714）</h2>
+        <h2 style="color: #2c3e50; margin-bottom: 25px;">基于SOP-EN-010-V4 MELE SN序列号编码规则20260413</h2>
         <div class="input-group">
             <input type="text" id="snInput" placeholder="请输入16位SN码" maxlength="16">
             <button onclick="parseSN()">立即解析</button>
@@ -108,8 +108,9 @@ const SN_RULES = {
     1: { // 第2位
         field: "主控型号",
         mapping: {
+            "0": "HX370",
             "1": "J3355",
-            "2": "J3455",
+            "2": "J3455 和 R2544 两个匹配结果",
             "4": "J4105",
             "5": "J4125",
             "6": "N3350",
@@ -121,7 +122,10 @@ const SN_RULES = {
             "F": "S905X2",
             "H": "N4500",
             "I": "N5105",
+            "J": "155H",
             "L": "N5100",
+            "M": "210H",
+            "N": "100U",
             "R": "N5095",
             "P": "N95",
             "Q": "N100",
@@ -145,6 +149,9 @@ const SN_RULES = {
         field: "DDR品牌",
         mapping: {
             "0": "无DDR",
+            "1": "镁光Micron翻新定制",
+            "2": "海力士SkHynix 翻新定制",
+            "3": "三星SAMSUNG 翻新定制",
             "S": "Samsung",
             "M": "Micron",
             "H": "Hynix",
@@ -182,6 +189,7 @@ const SN_RULES = {
             "I": "Airdisk",
             "N": "朗科Netac",
             "Y": "EAGET忆捷",
+            "2": "EAGET忆捷二手",
             "B": "BIWIN",
             "1": "江波龙EMMC+Foresee SSD",
             "4": "时创意EMMC+Foresee SSD",
@@ -190,6 +198,11 @@ const SN_RULES = {
             "9": "时创意EMMC+Airdisk SSD",
             "A": "时创意EMMC+忆捷 SSD",
             "S": "SUMSUNG",
+            "K": ":KIOXIA",
+            "J": "JD采购",
+            "C": "长江存储YMTC",
+            "1": "长江存储二手",
+            "P": "群联Phison",
         }
     },
     6: { // 第7位
@@ -217,6 +230,7 @@ const SN_RULES = {
             "3": "8111K",
             "4": "8125GB + 8111H",
             "5": "8125BG + 8125BG",
+            "6": "I226+I226",
         }
     },
     8: { // 第9位
@@ -232,6 +246,10 @@ const SN_RULES = {
             "8": "8=6222C，RTL8822CE-CG",
             "9": "9377",
             "N": "无WIFI",
+            "A": "AX211",
+            "B": "BE200",
+            "X": "AX210",
+            "M": "MT7925",
         }
     },
     9: { // 第10位
